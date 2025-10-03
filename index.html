@@ -457,11 +457,11 @@
         </header>
 
         <div class="update-section">
-            <h3>📊 Check for Updates</h3>
+            <h3>📊 Sync Tournament Data</h3>
             <div class="update-instructions">
-                Someone recorded a result? Click below to load the latest scores!
+                Team member shared an update? Paste it here to sync scores!
             </div>
-            <button class="refresh-btn" onclick="loadLatestData()">Load Latest Results</button>
+            <button class="refresh-btn" onclick="loadLatestData()">Load Shared Updates</button>
         </div>
 
         <div class="tabs">
@@ -508,11 +508,10 @@
                 <div class="instructions">
                     <h4>After clicking Save:</h4>
                     <ol>
-                        <li>Copy the JSON data that appears</li>
-                        <li>Go to GitHub and edit the matches.json file</li>
-                        <li>Replace all content with the new JSON</li>
-                        <li>Commit the changes</li>
-                        <li>Everyone can refresh to see updates!</li>
+                        <li>Your result is saved locally</li>
+                        <li>Copy the JSON data to share with others</li>
+                        <li>Send to your team via email/Slack/text</li>
+                        <li>They paste it using "Load Latest Results"</li>
                     </ol>
                 </div>
                 
@@ -526,16 +525,13 @@
 
     <div class="modal" id="updateModal">
         <div class="modal-content">
-            <h2>Update GitHub with New Results</h2>
+            <h2>Share Updated Results</h2>
             <div class="instructions">
-                <h4>Steps to update:</h4>
+                <h4>To share with your team:</h4>
                 <ol>
                     <li>Click "Copy JSON" below</li>
-                    <li>Go to: <a href="https://github.com/alichitsaz-tmg/golf-tournament/blob/main/matches.json" target="_blank">matches.json on GitHub</a></li>
-                    <li>Click the pencil icon to edit</li>
-                    <li>Select all (Cmd+A) and delete</li>
-                    <li>Paste the new JSON</li>
-                    <li>Commit changes with message like "Updated: [Winner] beat [Loser]"</li>
+                    <li>Share it via email, Slack, or text</li>
+                    <li>Others paste it using "Load Shared Updates" button</li>
                 </ol>
             </div>
             <div class="form-group">
@@ -623,26 +619,35 @@
             return matches;
         }
 
-        let allMatches = {};
+        let allMatches = generateInitialMatches();
         let currentMatch = null;
 
-        // Load data from GitHub
-        async function loadLatestData() {
-            try {
-                const response = await fetch('https://raw.githubusercontent.com/alichitsaz-tmg/golf-tournament/main/matches.json?t=' + Date.now());
-                if (response.ok) {
-                    const data = await response.json();
-                    allMatches = data;
+        // Load data from localStorage or GitHub
+        function loadLatestData() {
+            // First try localStorage
+            const savedData = localStorage.getItem('tournamentData');
+            if (savedData) {
+                try {
+                    allMatches = JSON.parse(savedData);
                     renderCurrentTab();
-                    alert('Latest results loaded successfully!');
-                } else {
-                    throw new Error('File not found');
+                    alert('Latest results loaded from local storage!');
+                    return;
+                } catch (e) {
+                    console.error('Error parsing saved data');
                 }
-            } catch (error) {
-                // If no matches.json exists yet, use initial data
-                allMatches = generateInitialMatches();
-                renderCurrentTab();
-                alert('No saved results found. Starting with fresh tournament.');
+            }
+            
+            // If no local data, try loading from pasted JSON
+            const jsonInput = prompt('Paste the latest tournament JSON here (or click Cancel to use current data):');
+            if (jsonInput && jsonInput.trim()) {
+                try {
+                    allMatches = JSON.parse(jsonInput);
+                    localStorage.setItem('tournamentData', jsonInput);
+                    renderCurrentTab();
+                    alert('Tournament data updated successfully!');
+                } catch (error) {
+                    alert('Invalid JSON format. Please check and try again.');
+                }
             }
         }
 
@@ -804,6 +809,9 @@
                     margin: margin
                 };
                 
+                // Save to localStorage
+                localStorage.setItem('tournamentData', JSON.stringify(allMatches));
+                
                 // Show update modal with JSON
                 const jsonOutput = JSON.stringify(allMatches, null, 2);
                 document.getElementById('jsonOutput').value = jsonOutput;
@@ -818,7 +826,7 @@
             const textarea = document.getElementById('jsonOutput');
             textarea.select();
             document.execCommand('copy');
-            alert('JSON copied! Now go to GitHub and update matches.json');
+            alert('JSON copied! Share this with your team and they can paste it using "Load Shared Updates"');
         }
 
         // Tab switching
@@ -843,7 +851,18 @@
 
         // Initialize on load
         window.addEventListener('load', function() {
-            loadLatestData();
+            // Load from localStorage if available, otherwise use fresh data
+            const savedData = localStorage.getItem('tournamentData');
+            if (savedData) {
+                try {
+                    allMatches = JSON.parse(savedData);
+                } catch (e) {
+                    allMatches = generateInitialMatches();
+                }
+            } else {
+                allMatches = generateInitialMatches();
+            }
+            renderCurrentTab();
         });
     </script>
 </body>
