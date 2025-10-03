@@ -51,6 +51,41 @@
             display: inline-block;
         }
 
+        .update-section {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .update-section h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .update-instructions {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .refresh-btn {
+            background: #ffc107;
+            color: #333;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: #e0a800;
+        }
+
         .tabs {
             display: flex;
             gap: 10px;
@@ -269,8 +304,10 @@
             background: white;
             border-radius: 15px;
             padding: 30px;
-            max-width: 400px;
+            max-width: 500px;
             width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
 
@@ -296,6 +333,16 @@
             border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 1em;
+        }
+
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-family: monospace;
+            min-height: 200px;
         }
 
         .form-group select:focus, .form-group input:focus {
@@ -337,11 +384,40 @@
             background: #d0d0d0;
         }
 
-        .loading {
-            text-align: center;
-            padding: 40px;
-            font-size: 1.2em;
+        .instructions {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .instructions h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
             color: #666;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #218838;
         }
 
         @media (max-width: 768px) {
@@ -379,6 +455,14 @@
                 <strong>Stage 1: Group Play</strong> | Sept 22 - Oct 11 | Top 2 advance from each group
             </div>
         </header>
+
+        <div class="update-section">
+            <h3>📊 Check for Updates</h3>
+            <div class="update-instructions">
+                Someone recorded a result? Click below to load the latest scores!
+            </div>
+            <button class="refresh-btn" onclick="loadLatestData()">Load Latest Results</button>
+        </div>
 
         <div class="tabs">
             <button class="tab active" onclick="showTab('matches')">Matches</button>
@@ -420,33 +504,53 @@
                         <option value="9&8">9 & 8</option>
                     </select>
                 </div>
+                
+                <div class="instructions">
+                    <h4>After clicking Save:</h4>
+                    <ol>
+                        <li>Copy the JSON data that appears</li>
+                        <li>Go to GitHub and edit the matches.json file</li>
+                        <li>Replace all content with the new JSON</li>
+                        <li>Commit the changes</li>
+                        <li>Everyone can refresh to see updates!</li>
+                    </ol>
+                </div>
+                
                 <div class="form-buttons">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Result</button>
+                    <button type="submit" class="btn btn-primary">Save & Get Update Code</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+    <div class="modal" id="updateModal">
+        <div class="modal-content">
+            <h2>Update GitHub with New Results</h2>
+            <div class="instructions">
+                <h4>Steps to update:</h4>
+                <ol>
+                    <li>Click "Copy JSON" below</li>
+                    <li>Go to: <a href="https://github.com/alichitsaz-tmg/golf-tournament/blob/main/matches.json" target="_blank">matches.json on GitHub</a></li>
+                    <li>Click the pencil icon to edit</li>
+                    <li>Select all (Cmd+A) and delete</li>
+                    <li>Paste the new JSON</li>
+                    <li>Commit changes with message like "Updated: [Winner] beat [Loser]"</li>
+                </ol>
+            </div>
+            <div class="form-group">
+                <label>Updated Tournament Data (Copy this):</label>
+                <textarea id="jsonOutput" readonly></textarea>
+                <button class="copy-btn" onclick="copyJSON()">Copy JSON</button>
+            </div>
+            <div class="form-buttons">
+                <button type="button" class="btn btn-secondary" onclick="closeUpdateModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBt0TdlBuKMEMuN8zdk2_WvThfNIdTqEMM",
-            authDomain: "taylormadegolf.firebaseapp.com",
-            databaseURL: "https://taylormadegolf-default-rtdb.firebaseio.com",
-            projectId: "taylormadegolf",
-            storageBucket: "taylormadegolf.firebasestorage.app",
-            messagingSenderId: "555940836513",
-            appId: "1:555940836513:web:1458ef3f473219784b2ce0"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-
-        // Tournament Data
+        // Tournament Data Structure
         const tournamentData = {
             groups: {
                 A: {
@@ -489,27 +593,27 @@
             }
         };
 
-        // Generate all matches for each group
-        function generateMatches() {
+        // Generate initial matches structure
+        function generateInitialMatches() {
             const matches = {};
             
             Object.keys(tournamentData.groups).forEach(groupKey => {
                 const group = tournamentData.groups[groupKey];
                 matches[groupKey] = [];
                 
-                // Generate round-robin matches
                 for (let i = 0; i < group.players.length; i++) {
                     for (let j = i + 1; j < group.players.length; j++) {
-                        // For Group D, limit matches per player
-                        if (groupKey === 'D') {
-                            // Skip specific match to ensure each player plays exactly 4 matches
-                            // Ali (index 3) doesn't play Konda (index 4)
-                            if ((i === 3 && j === 4)) continue;
-                        }
+                        if (groupKey === 'D' && i === 3 && j === 4) continue;
                         
                         matches[groupKey].push({
-                            player1: group.players[i],
-                            player2: group.players[j],
+                            player1: {
+                                name: group.players[i].name,
+                                handicap: group.players[i].handicap
+                            },
+                            player2: {
+                                name: group.players[j].name,
+                                handicap: group.players[j].handicap
+                            },
                             result: null
                         });
                     }
@@ -522,24 +626,27 @@
         let allMatches = {};
         let currentMatch = null;
 
-        // Initialize or load matches from Firebase
-        function initializeDatabase() {
-            const matchesRef = database.ref('matches');
-            
-            matchesRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
+        // Load data from GitHub
+        async function loadLatestData() {
+            try {
+                const response = await fetch('https://raw.githubusercontent.com/alichitsaz-tmg/golf-tournament/main/matches.json?t=' + Date.now());
+                if (response.ok) {
+                    const data = await response.json();
                     allMatches = data;
                     renderCurrentTab();
+                    alert('Latest results loaded successfully!');
                 } else {
-                    // First time setup - initialize with match structure
-                    allMatches = generateMatches();
-                    matchesRef.set(allMatches);
+                    throw new Error('File not found');
                 }
-            });
+            } catch (error) {
+                // If no matches.json exists yet, use initial data
+                allMatches = generateInitialMatches();
+                renderCurrentTab();
+                alert('No saved results found. Starting with fresh tournament.');
+            }
         }
 
-        // Render matches tab
+        // Render matches
         function renderMatches() {
             const container = document.getElementById('matches-content');
             let html = '';
@@ -548,10 +655,7 @@
                 const group = tournamentData.groups[groupKey];
                 const matches = allMatches[groupKey];
                 
-                html += `
-                    <div class="group">
-                        <div class="group-header">${group.name}</div>
-                `;
+                html += `<div class="group"><div class="group-header">${group.name}</div>`;
                 
                 matches.forEach((match, index) => {
                     const matchId = `${groupKey}-${index}`;
@@ -570,23 +674,12 @@
                                 </div>
                             </div>
                             <div class="match-result">
-                    `;
-                    
-                    if (hasResult) {
-                        html += `
-                            <div class="result-display">
-                                ${match.result.winner} ${match.result.margin}
-                            </div>
-                            <button class="record-btn" onclick="openModal('${matchId}')">Edit</button>
-                        `;
-                    } else {
-                        html += `
-                            <div class="result-display pending">Pending</div>
-                            <button class="record-btn" onclick="openModal('${matchId}')">Record Result</button>
-                        `;
-                    }
-                    
-                    html += `
+                                ${hasResult ? 
+                                    `<div class="result-display">${match.result.winner} ${match.result.margin}</div>
+                                     <button class="record-btn" onclick="openModal('${matchId}')">Edit</button>` :
+                                    `<div class="result-display pending">Pending</div>
+                                     <button class="record-btn" onclick="openModal('${matchId}')">Record Result</button>`
+                                }
                             </div>
                         </div>
                     `;
@@ -598,41 +691,7 @@
             container.innerHTML = html;
         }
 
-        // Calculate standings
-        function calculateStandings() {
-            const standings = {};
-            
-            Object.keys(allMatches).forEach(groupKey => {
-                const matches = allMatches[groupKey];
-                const players = tournamentData.groups[groupKey].players;
-                
-                standings[groupKey] = {};
-                players.forEach(player => {
-                    standings[groupKey][player.name] = {
-                        name: player.name,
-                        wins: 0,
-                        losses: 0,
-                        played: 0
-                    };
-                });
-                
-                matches.forEach(match => {
-                    if (match.result) {
-                        const winner = match.result.winner;
-                        const loser = winner === match.player1.name ? match.player2.name : match.player1.name;
-                        
-                        standings[groupKey][winner].wins++;
-                        standings[groupKey][winner].played++;
-                        standings[groupKey][loser].losses++;
-                        standings[groupKey][loser].played++;
-                    }
-                });
-            });
-            
-            return standings;
-        }
-
-        // Render standings tab
+        // Calculate and render standings
         function renderStandings() {
             const container = document.getElementById('standings-content');
             const standings = calculateStandings();
@@ -642,15 +701,9 @@
             Object.keys(standings).forEach(groupKey => {
                 const group = tournamentData.groups[groupKey];
                 const groupStandings = Object.values(standings[groupKey])
-                    .sort((a, b) => {
-                        if (b.wins !== a.wins) return b.wins - a.wins;
-                        return a.losses - b.losses;
-                    });
+                    .sort((a, b) => b.wins !== a.wins ? b.wins - a.wins : a.losses - b.losses);
                 
-                html += `
-                    <div class="standings-group">
-                        <h3>${group.name}</h3>
-                `;
+                html += `<div class="standings-group"><h3>${group.name}</h3>`;
                 
                 groupStandings.forEach((player, index) => {
                     const isQualified = index < 2;
@@ -675,6 +728,35 @@
             container.innerHTML = html;
         }
 
+        function calculateStandings() {
+            const standings = {};
+            
+            Object.keys(allMatches).forEach(groupKey => {
+                const matches = allMatches[groupKey];
+                const players = tournamentData.groups[groupKey].players;
+                
+                standings[groupKey] = {};
+                players.forEach(player => {
+                    standings[groupKey][player.name] = {
+                        name: player.name,
+                        wins: 0,
+                        losses: 0
+                    };
+                });
+                
+                matches.forEach(match => {
+                    if (match.result) {
+                        const winner = match.result.winner;
+                        const loser = winner === match.player1.name ? match.player2.name : match.player1.name;
+                        standings[groupKey][winner].wins++;
+                        standings[groupKey][loser].losses++;
+                    }
+                });
+            });
+            
+            return standings;
+        }
+
         // Modal functions
         function openModal(matchId) {
             const [groupKey, matchIndex] = matchId.split('-');
@@ -683,22 +765,16 @@
             
             const modal = document.getElementById('recordModal');
             const winnerSelect = document.getElementById('winner');
-            const marginSelect = document.getElementById('margin');
             
-            // Populate winner dropdown
             winnerSelect.innerHTML = `
                 <option value="">Select winner...</option>
                 <option value="${match.player1.name}">${match.player1.name}</option>
                 <option value="${match.player2.name}">${match.player2.name}</option>
             `;
             
-            // If editing existing result, pre-populate
             if (match.result) {
                 winnerSelect.value = match.result.winner;
-                marginSelect.value = match.result.margin;
-            } else {
-                winnerSelect.value = '';
-                marginSelect.value = '';
+                document.getElementById('margin').value = match.result.margin;
             }
             
             modal.classList.add('active');
@@ -710,6 +786,10 @@
             currentMatch = null;
         }
 
+        function closeUpdateModal() {
+            document.getElementById('updateModal').classList.remove('active');
+        }
+
         // Handle form submission
         document.getElementById('recordForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -718,24 +798,34 @@
             const margin = document.getElementById('margin').value;
             
             if (winner && margin && currentMatch) {
-                // Update Firebase
-                const matchRef = database.ref(`matches/${currentMatch.groupKey}/${currentMatch.matchIndex}/result`);
-                matchRef.set({
+                // Update local data
+                allMatches[currentMatch.groupKey][currentMatch.matchIndex].result = {
                     winner: winner,
                     margin: margin
-                });
+                };
+                
+                // Show update modal with JSON
+                const jsonOutput = JSON.stringify(allMatches, null, 2);
+                document.getElementById('jsonOutput').value = jsonOutput;
+                document.getElementById('updateModal').classList.add('active');
                 
                 closeModal();
+                renderCurrentTab();
             }
         });
 
+        function copyJSON() {
+            const textarea = document.getElementById('jsonOutput');
+            textarea.select();
+            document.execCommand('copy');
+            alert('JSON copied! Now go to GitHub and update matches.json');
+        }
+
         // Tab switching
         function showTab(tab) {
-            // Update tab buttons
             document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             
-            // Update content
             document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
             document.getElementById(`${tab}-content`).style.display = 'block';
             
@@ -752,8 +842,8 @@
         }
 
         // Initialize on load
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeDatabase();
+        window.addEventListener('load', function() {
+            loadLatestData();
         });
     </script>
 </body>
