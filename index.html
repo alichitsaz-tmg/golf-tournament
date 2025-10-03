@@ -1,760 +1,503 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaylorMade Golf Tournament 2024</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TaylorMade Match Play – Tournament Tracker</title>
+  <style>
+    :root{
+      --bg: #0b1220;
+      --card: #10192b;
+      --muted: #8aa0c6;
+      --text: #e8f0ff;
+      --accent: #4dd0e1;
+      --accent-2: #7c4dff;
+      --win: #2ecc71;
+      --lose: #e74c3c;
+      --warn: #ffb020;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+      background: radial-gradient(1000px 600px at 10% -10%, #152647, transparent),
+                  radial-gradient(900px 500px at 110% -20%, #371a57, transparent),
+                  linear-gradient(180deg, #080c17, #0b1220);
+      background-attachment: fixed;
+    }
+    header{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter: blur(10px);
+      background: linear-gradient(180deg, rgba(11,18,32,.9), rgba(11,18,32,.5));
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .wrap{max-width:1200px; margin:0 auto; padding: 16px;}
+    .topbar{display:flex; align-items:center; gap:16px;}
+    .brand{
+      display:flex; align-items:center; gap:12px; font-weight:700; letter-spacing:.3px;
+    }
+    .logo{width:36px; height:36px; border-radius:8px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: var(--shadow)}
+    .subtitle{color:var(--muted); font-size:.95rem}
+    .tabs{margin-left:auto; display:flex; gap:8px}
+    .tab{appearance:none; border:1px solid rgba(255,255,255,.1); background:transparent; color:var(--text); padding:8px 14px; border-radius:10px; cursor:pointer}
+    .tab.active{background: linear-gradient(135deg, rgba(77,208,225,.18), rgba(124,77,255,.18)); border-color: transparent}
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
+    .notice{background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08); padding:10px 12px; border-radius:10px; color:var(--muted); font-size:.9rem}
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+    main{padding: 20px 0 80px}
+    h2{margin: 18px 6px 10px; font-size:1.1rem; color:#bcd1ff; letter-spacing:.2px}
 
-        header {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            text-align: center;
-        }
+    .grid{display:grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap:12px}
+    .card{background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:14px; box-shadow: var(--shadow)}
+    .match{
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .row{display:flex; justify-content:space-between; align-items:center; gap:10px}
+    .players{display:flex; flex-direction:column; gap:6px}
+    .p{display:flex; align-items:center; gap:8px}
+    .name{font-weight:600}
+    .hcp{color:var(--muted); font-size:.85rem}
+    .badge{font-size:.72rem; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.1); color:#bcd1ff}
 
-        h1 {
-            color: #333;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
+    .result{display:flex; align-items:center; gap:8px}
+    .result .win{color:var(--win); font-weight:700}
+    .result .lose{color:var(--lose);}
 
-        .subtitle {
-            color: #666;
-            font-size: 1.2em;
-            margin-bottom: 20px;
-        }
+    .btn{appearance:none; background: linear-gradient(135deg, rgba(77,208,225,.15), rgba(124,77,255,.15)); color:var(--text); border:1px solid rgba(255,255,255,.08); padding:8px 12px; border-radius:12px; cursor:pointer}
+    .btn:hover{filter:brightness(1.1)}
+    .btn.small{padding:6px 10px; font-size:.9rem}
+    .btn.ghost{background: transparent}
 
-        .phase-info {
-            background: #f0f0f0;
-            padding: 15px;
-            border-radius: 10px;
-            display: inline-block;
-        }
+    .kicker{font-size:.85rem; color:var(--muted)}
 
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
+    .standings{display:grid; grid-template-columns: repeat(auto-fit, minmax(320px,1fr)); gap:16px}
+    .table{width:100%; border-collapse: collapse}
+    .table th, .table td{padding:8px 6px; border-bottom: 1px dashed rgba(255,255,255,.08)}
+    .table th{font-weight:600; color:#c7d6ff; text-align:left}
+    .table td.stat{text-align:center}
+    .qual{background: linear-gradient(135deg, rgba(46,204,113,.15), rgba(46,204,113,.08)); border:1px solid rgba(46,204,113,.25)}
 
-        .tab {
-            flex: 1;
-            min-width: 150px;
-            padding: 15px 25px;
-            background: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1.1em;
-            font-weight: 600;
-            color: #666;
-            transition: all 0.3s;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
+    /* modal */
+    dialog{border:none; border-radius:16px; padding:0; background: rgba(22,28,44,.98); color:var(--text); width:min(92vw, 520px); box-shadow: var(--shadow)}
+    .modal-header{padding:16px 18px; border-bottom:1px solid rgba(255,255,255,.08); display:flex; justify-content:space-between; align-items:center}
+    .modal-body{padding:18px; display:flex; flex-direction:column; gap:12px}
+    .modal-actions{padding:16px 18px; display:flex; justify-content:flex-end; gap:10px; border-top:1px solid rgba(255,255,255,.08)}
+    select, .select{width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.15); background:#0d1526; color:var(--text)}
+    .two-col{display:grid; grid-template-columns:1fr 1fr; gap:10px}
 
-        .tab:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 7px 20px rgba(0,0,0,0.15);
-        }
+    footer{position:fixed; bottom:10px; right:10px; display:flex; gap:8px}
+    .pill{font-size:.8rem; color:var(--muted)}
 
-        .tab.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .content {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-
-        .group {
-            margin-bottom: 40px;
-        }
-
-        .group-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 1.3em;
-            font-weight: 600;
-        }
-
-        .match {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            transition: all 0.3s;
-        }
-
-        .match:hover {
-            background: #e9ecef;
-            transform: translateX(5px);
-        }
-
-        .match-players {
-            flex: 1;
-            min-width: 250px;
-        }
-
-        .player {
-            font-size: 1.1em;
-            padding: 5px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .player-name {
-            font-weight: 500;
-        }
-
-        .handicap {
-            color: #888;
-            font-size: 0.9em;
-            margin-left: 8px;
-        }
-
-        .match-result {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .result-display {
-            background: #28a745;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: 600;
-            min-width: 120px;
-            text-align: center;
-        }
-
-        .result-display.pending {
-            background: #ffc107;
-            color: #333;
-        }
-
-        .record-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .record-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .standings-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
-
-        .standings-group {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-        }
-
-        .standings-group h3 {
-            color: #333;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e0e0e0;
-        }
-
-        .standings-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .standings-row.qualified {
-            background: #d4edda;
-            margin: 0 -10px;
-            padding-left: 10px;
-            padding-right: 10px;
-            border-radius: 5px;
-        }
-
-        .standings-row:last-child {
-            border-bottom: none;
-        }
-
-        .position {
-            font-weight: 700;
-            color: #666;
-            margin-right: 10px;
-            min-width: 25px;
-        }
-
-        .standings-name {
-            flex: 1;
-            font-weight: 500;
-        }
-
-        .standings-stats {
-            display: flex;
-            gap: 15px;
-            font-weight: 600;
-        }
-
-        .wins {
-            color: #28a745;
-        }
-
-        .losses {
-            color: #dc3545;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-
-        .modal h2 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #555;
-        }
-
-        .form-group select, .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1em;
-        }
-
-        .form-group select:focus, .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .form-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: scale(1.05);
-        }
-
-        .btn-secondary {
-            background: #e0e0e0;
-            color: #333;
-        }
-
-        .btn-secondary:hover {
-            background: #d0d0d0;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            font-size: 1.2em;
-            color: #666;
-        }
-
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 1.8em;
-            }
-
-            .tabs {
-                gap: 5px;
-            }
-
-            .tab {
-                min-width: 100px;
-                padding: 12px 15px;
-                font-size: 1em;
-            }
-
-            .match {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .match-result {
-                justify-content: center;
-            }
-        }
-    </style>
+    @media (max-width:600px){
+      .row.wrap{flex-direction:column; align-items:flex-start}
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>⛳ TaylorMade Golf Tournament 2024</h1>
-            <div class="subtitle">3-Week Match Play Championship</div>
-            <div class="phase-info">
-                <strong>Stage 1: Group Play</strong> | Sept 22 - Oct 11 | Top 2 advance from each group
-            </div>
-        </header>
-
+  <header>
+    <div class="wrap">
+      <div class="topbar">
+        <div class="logo" aria-hidden="true"></div>
+        <div class="brand">
+          <div>
+            <div style="font-size:1.1rem; line-height:1.2">TaylorMade Match Play – Tournament Tracker</div>
+            <div class="subtitle">Stage 1 · Group Play · Sept 22 – Oct 11 · 9-hole match play (Front 9)</div>
+          </div>
+        </div>
         <div class="tabs">
-            <button class="tab active" onclick="showTab('matches')">Matches</button>
-            <button class="tab" onclick="showTab('standings')">Standings</button>
+          <button id="tabMatches" class="tab active" onclick="switchView('matches')">Matches</button>
+          <button id="tabStandings" class="tab" onclick="switchView('standings')">Standings</button>
         </div>
-
-        <div class="content">
-            <div id="matches-content" class="tab-content">
-                <div class="loading">Loading tournament data...</div>
-            </div>
-            <div id="standings-content" class="tab-content" style="display: none;">
-                <div class="loading">Loading standings...</div>
-            </div>
-        </div>
+      </div>
+      <div class="notice" id="initNotice" style="display:none; margin-top:10px"></div>
     </div>
+  </header>
 
-    <div class="modal" id="recordModal">
-        <div class="modal-content">
-            <h2>Record Match Result</h2>
-            <form id="recordForm">
-                <div class="form-group">
-                    <label>Winner</label>
-                    <select id="winner" required>
-                        <option value="">Select winner...</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Victory Margin</label>
-                    <select id="margin" required>
-                        <option value="">Select margin...</option>
-                        <option value="1&0">1 up</option>
-                        <option value="2&1">2 & 1</option>
-                        <option value="3&2">3 & 2</option>
-                        <option value="4&3">4 & 3</option>
-                        <option value="5&4">5 & 4</option>
-                        <option value="6&5">6 & 5</option>
-                        <option value="7&6">7 & 6</option>
-                        <option value="8&7">8 & 7</option>
-                        <option value="9&8">9 & 8</option>
-                    </select>
-                </div>
-                <div class="form-buttons">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Result</button>
-                </div>
-            </form>
-        </div>
+  <main class="wrap">
+    <section id="viewMatches">
+      <div id="matchesContainer"></div>
+    </section>
+    <section id="viewStandings" style="display:none">
+      <div id="standingsContainer"></div>
+    </section>
+  </main>
+
+  <dialog id="resultDialog">
+    <div class="modal-header">
+      <div>
+        <div style="font-weight:700">Record Match Result</div>
+        <div id="modalMatchLabel" class="kicker"></div>
+      </div>
+      <button class="btn ghost small" onclick="closeDialog()">✕</button>
     </div>
+    <div class="modal-body">
+      <div class="two-col">
+        <div>
+          <label class="kicker">Winner</label>
+          <select id="winnerSelect" class="select"></select>
+        </div>
+        <div>
+          <label class="kicker">Victory Margin</label>
+          <select id="marginSelect" class="select"></select>
+        </div>
+      </div>
+      <div class="kicker">Anyone can record results. Updates appear in real-time for everyone.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeDialog()">Cancel</button>
+      <button class="btn" id="saveResultBtn">Save Result</button>
+    </div>
+  </dialog>
 
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
-    <script>
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBt0TdlBuKMEMuN8zdk2_WvThfNIdTqEMM",
-            authDomain: "taylormadegolf.firebaseapp.com",
-            databaseURL: "https://taylormadegolf-default-rtdb.firebaseio.com",
-            projectId: "taylormadegolf",
-            storageBucket: "taylormadegolf.firebasestorage.app",
-            messagingSenderId: "555940836513",
-            appId: "1:555940836513:web:1458ef3f473219784b2ce0"
-        };
+  <footer>
+    <button class="btn small" id="exportBtn" title="Download current data as JSON">📥 Export</button>
+    <button class="btn small" id="resetBtn" style="display:none" title="Reset (wipe DB and re-seed)">♻️ Reset</button>
+  </footer>
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+  <script>
+    // ====== CONFIG (no SDKs; pure REST so it works on GitHub Pages) ======
+    const DB_URL = 'https://taylormadegolf-default-rtdb.firebaseio.com';
+    const ROOT_PATH = '/tournament';
 
-        // Tournament Data
-        const tournamentData = {
-            groups: {
-                A: {
-                    name: "Group A",
-                    players: [
-                        { name: "Craig Schneider", handicap: 2.6 },
-                        { name: "Buddha Gurung", handicap: 8.5 },
-                        { name: "Mike Callagy", handicap: 11.0 },
-                        { name: "Cesar Zepeda", handicap: 20.1 }
-                    ]
-                },
-                B: {
-                    name: "Group B",
-                    players: [
-                        { name: "Elliot Badar", handicap: 6.2 },
-                        { name: "Tom Collard", handicap: 7.5 },
-                        { name: "Sree Gottipati", handicap: 12.0 },
-                        { name: "Brian Crumrine", handicap: 17.5 }
-                    ]
-                },
-                C: {
-                    name: "Group C (Most Competitive!)",
-                    players: [
-                        { name: "Nathan Kelly", handicap: 7.0 },
-                        { name: "Rick Lines", handicap: 8.0 },
-                        { name: "David Damitz", handicap: 9.3 },
-                        { name: "Paul Wollenburg", handicap: 9.5 }
-                    ]
-                },
-                D: {
-                    name: "Group D (5 Players - 4 Matches Each)",
-                    players: [
-                        { name: "Quyen Dang", handicap: 8.3 },
-                        { name: "Abram Rios", handicap: 7.0 },
-                        { name: "Keshav Prasad", handicap: 8.0 },
-                        { name: "Ali Chitsaz", handicap: 8.5 },
-                        { name: "Konda Reddy Polu", handicap: 12.0 }
-                    ]
-                }
-            }
-        };
+    // If you need to exclude Ali vs Konda in Group D before seeding for the first time,
+    // toggle the flag below to true, then click the Reset button (add #admin to URL to show it).
+    const EXCLUDE_ALI_VS_KONDA = false;
 
-        // Generate all matches for each group
-        function generateMatches() {
-            const matches = {};
-            
-            Object.keys(tournamentData.groups).forEach(groupKey => {
-                const group = tournamentData.groups[groupKey];
-                matches[groupKey] = [];
-                
-                // Generate round-robin matches
-                for (let i = 0; i < group.players.length; i++) {
-                    for (let j = i + 1; j < group.players.length; j++) {
-                        // For Group D, limit matches per player
-                        if (groupKey === 'D') {
-                            // Skip specific match to ensure each player plays exactly 4 matches
-                            // Ali (index 3) doesn't play Konda (index 4)
-                            if ((i === 3 && j === 4)) continue;
-                        }
-                        
-                        matches[groupKey].push({
-                            player1: group.players[i],
-                            player2: group.players[j],
-                            result: null
-                        });
-                    }
-                }
-            });
-            
-            return matches;
+    // ====== STATE ======
+    let appState = { players:{}, matches:{}, meta:{} };
+    let selectedMatchId = null;
+    const clientId = (() => {
+      const k = 'tm_matchplay_uid';
+      let v = localStorage.getItem(k);
+      if(!v){ v = 'u_' + Math.random().toString(36).slice(2,10); localStorage.setItem(k,v); }
+      return v;
+    })();
+
+    // ====== UTIL ======
+    async function api(path, {method='GET', body=null}={}){
+      const url = `${DB_URL}${path}.json`;
+      const opts = { method, headers:{ 'Content-Type':'application/json' } };
+      if(body!==null) opts.body = JSON.stringify(body);
+      const res = await fetch(url, opts);
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      return await res.json();
+    }
+    async function apiDelete(path){
+      const url = `${DB_URL}${path}.json`;
+      const res = await fetch(url, { method:'DELETE' });
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      return await res.json();
+    }
+
+    function onStream(path, handler){
+      const url = `${DB_URL}${path}.json`;
+      const es = new EventSource(url);
+      es.addEventListener('put', (e)=>{ try{ handler(JSON.parse(e.data)); }catch{} });
+      es.addEventListener('patch', (e)=>{ try{ handler(JSON.parse(e.data)); }catch{} });
+      es.onerror = (e)=>{ console.warn('Stream error (auto-retrying)...', e); };
+      return es;
+    }
+
+    function byGroup(players){
+      const g = { A:[], B:[], C:[], D:[] };
+      for(const p of Object.values(players)) g[p.group].push(p);
+      return g;
+    }
+
+    function makeId(prefix='m'){
+      return prefix + '_' + Math.random().toString(36).slice(2,9);
+    }
+
+    function marginToDiff(m){
+      if(!m) return 0;
+      if(m === '1 up') return 1;
+      const parts = m.split('&')[0].trim();
+      const n = parseInt(parts,10); return isNaN(n)?0:n;
+    }
+
+    function formatName(p){ return `${p.name} <span class="hcp">(${p.hcp})</span>`; }
+
+    // ====== SEED DATA (runs once if DB empty) ======
+    function seedPlayers(){
+      const players = {};
+      // Group A
+      players['a1'] = { id:'a1', name:'Craig Schneider', hcp:2.6, group:'A' };
+      players['a2'] = { id:'a2', name:'Buddha Gurung', hcp:8.5, group:'A' };
+      players['a3'] = { id:'a3', name:'Mike Callagy', hcp:11.0, group:'A' };
+      players['a4'] = { id:'a4', name:'Cesar Zepeda', hcp:20.1, group:'A' };
+      // Group B
+      players['b1'] = { id:'b1', name:'Elliot Badar', hcp:6.2, group:'B' };
+      players['b2'] = { id:'b2', name:'Tom Collard', hcp:7.5, group:'B' };
+      players['b3'] = { id:'b3', name:'Sree Gottipati', hcp:12.0, group:'B' };
+      players['b4'] = { id:'b4', name:'Brian Crumrine', hcp:17.5, group:'B' };
+      // Group C
+      players['c1'] = { id:'c1', name:'Nathan Kelly', hcp:7.0, group:'C' };
+      players['c2'] = { id:'c2', name:'Rick Lines', hcp:8.0, group:'C' };
+      players['c3'] = { id:'c3', name:'David Damitz', hcp:9.3, group:'C' };
+      players['c4'] = { id:'c4', name:'Paul Wollenburg', hcp:9.5, group:'C' };
+      // Group D (5 players)
+      players['d1'] = { id:'d1', name:'Quyen Dang', hcp:8.3, group:'D' };
+      players['d2'] = { id:'d2', name:'Abram Rios', hcp:7.0, group:'D' };
+      players['d3'] = { id:'d3', name:'Keshav Prasad', hcp:8.0, group:'D' };
+      players['d4'] = { id:'d4', name:'Ali Chitsaz', hcp:8.5, group:'D' };
+      players['d5'] = { id:'d5', name:'Konda Reddy Polu', hcp:12.0, group:'D' };
+      return players;
+    }
+
+    function roundRobinPairs(ids){
+      const pairs=[]; for(let i=0;i<ids.length;i++){ for(let j=i+1;j<ids.length;j++){ pairs.push([ids[i], ids[j]]); } } return pairs;
+    }
+
+    function seedMatches(players){
+      const groups = byGroup(players);
+      const matches = {};
+      function addMatch(group, p1, p2){
+        const id = makeId('m');
+        matches[id] = { id, group, p1, p2, stage:'Group', result:null };
+      }
+      // A, B, C: 4-player round robin (6 matches each group)
+      for(const g of ['A','B','C']){
+        const ids = groups[g].map(p=>p.id);
+        for(const [x,y] of roundRobinPairs(ids)) addMatch(g, x, y);
+      }
+      // D: 5-player round robin (10 matches). Optionally exclude Ali vs Konda.
+      {
+        const ids = groups['D'].map(p=>p.id);
+        let pairs = roundRobinPairs(ids);
+        if(EXCLUDE_ALI_VS_KONDA){
+          pairs = pairs.filter(([x,y])=> !( (x==='d4' && y==='d5') || (x==='d5' && y==='d4') ));
         }
+        for(const [x,y] of pairs) addMatch('D', x, y);
+      }
+      return matches;
+    }
 
-        let allMatches = {};
-        let currentMatch = null;
-
-        // Initialize or load matches from Firebase
-        function initializeDatabase() {
-            const matchesRef = database.ref('matches');
-            
-            matchesRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    allMatches = data;
-                    renderCurrentTab();
-                } else {
-                    // First time setup - initialize with match structure
-                    allMatches = generateMatches();
-                    matchesRef.set(allMatches);
-                }
-            });
+    async function ensureSeeded(){
+      try{
+        const meta = await api(`${ROOT_PATH}/meta`);
+        if(meta && meta.initialized){
+          return; // already seeded
         }
+        const players = seedPlayers();
+        const matches = seedMatches(players);
+        const payload = { players, matches, meta:{ initialized: true, initializedAt: Date.now(), excludeAliVsKonda: !!EXCLUDE_ALI_VS_KONDA } };
+        await api(`${ROOT_PATH}`, { method:'PUT', body: payload });
+        showInitNotice('Tournament data initialized. You are good to go.');
+      }catch(err){ console.error('Seed failed', err); }
+    }
 
-        // Render matches tab
-        function renderMatches() {
-            const container = document.getElementById('matches-content');
-            let html = '';
-            
-            Object.keys(allMatches).forEach(groupKey => {
-                const group = tournamentData.groups[groupKey];
-                const matches = allMatches[groupKey];
-                
-                html += `
-                    <div class="group">
-                        <div class="group-header">${group.name}</div>
-                `;
-                
-                matches.forEach((match, index) => {
-                    const matchId = `${groupKey}-${index}`;
-                    const hasResult = match.result !== null;
-                    
-                    html += `
-                        <div class="match">
-                            <div class="match-players">
-                                <div class="player">
-                                    <span class="player-name">${match.player1.name}</span>
-                                    <span class="handicap">(${match.player1.handicap})</span>
-                                </div>
-                                <div class="player">
-                                    <span class="player-name">${match.player2.name}</span>
-                                    <span class="handicap">(${match.player2.handicap})</span>
-                                </div>
-                            </div>
-                            <div class="match-result">
-                    `;
-                    
-                    if (hasResult) {
-                        html += `
-                            <div class="result-display">
-                                ${match.result.winner} ${match.result.margin}
-                            </div>
-                            <button class="record-btn" onclick="openModal('${matchId}')">Edit</button>
-                        `;
-                    } else {
-                        html += `
-                            <div class="result-display pending">Pending</div>
-                            <button class="record-btn" onclick="openModal('${matchId}')">Record Result</button>
-                        `;
-                    }
-                    
-                    html += `
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                html += '</div>';
-            });
-            
-            container.innerHTML = html;
+    // ====== RENDER ======
+    function el(html){ const d=document.createElement('div'); d.innerHTML=html.trim(); return d.firstElementChild; }
+
+    function renderMatches(){
+      const container = document.getElementById('matchesContainer');
+      const groups = { A:[], B:[], C:[], D:[] };
+      const byId = appState.matches;
+      const entries = Object.values(byId).sort((a,b)=> a.group.localeCompare(b.group));
+      for(const m of entries){ groups[m.group].push(m); }
+      container.innerHTML = '';
+      for(const g of ['A','B','C','D']){
+        const section = el(`<div><h2>Group ${g} <span class="kicker">${(appState.meta.excludeAliVsKonda && g==='D')? '· Ali vs Konda not scheduled' : ''}</span></h2><div class="grid" id="grid_${g}"></div></div>`);
+        container.appendChild(section);
+        const grid = section.querySelector(`#grid_${g}`);
+        for(const m of groups[g]){
+          const p1 = appState.players[m.p1];
+          const p2 = appState.players[m.p2];
+          const r = m.result;
+          const has = !!r;
+          const winnerName = has ? appState.players[r.winnerId].name : '';
+          const loserId = has ? (r.winnerId===p1.id ? p2.id : p1.id) : null;
+          const loserName = has ? appState.players[loserId].name : '';
+          const card = el(`
+            <div class="card match">
+              <div class="row wrap">
+                <div class="players">
+                  <div class="p"><span class="name">${p1.name}</span> <span class="hcp">(${p1.hcp})</span></div>
+                  <div class="p"><span class="name">${p2.name}</span> <span class="hcp">(${p2.hcp})</span></div>
+                </div>
+                <div class="row" style="gap:6px">
+                  ${ has ? `<div class="result"><span class="win">${winnerName}</span><span class="kicker">won</span><span class="badge">${r.margin}</span></div>` : `<span class="badge">No result</span>` }
+                </div>
+              </div>
+              <div class="row" style="justify-content:flex-end; gap:8px">
+                ${ has ? `<button class="btn ghost small" data-mid="${m.id}" data-act="clear">Clear</button>` : '' }
+                <button class="btn small" data-mid="${m.id}" data-act="record">${ has ? 'Edit' : 'Record Result' }</button>
+              </div>
+            </div>`);
+          grid.appendChild(card);
         }
+      }
+      container.querySelectorAll('button[data-act]')
+        .forEach(btn=> btn.addEventListener('click', onMatchButton));
+    }
 
-        // Calculate standings
-        function calculateStandings() {
-            const standings = {};
-            
-            Object.keys(allMatches).forEach(groupKey => {
-                const matches = allMatches[groupKey];
-                const players = tournamentData.groups[groupKey].players;
-                
-                standings[groupKey] = {};
-                players.forEach(player => {
-                    standings[groupKey][player.name] = {
-                        name: player.name,
-                        wins: 0,
-                        losses: 0,
-                        played: 0
-                    };
-                });
-                
-                matches.forEach(match => {
-                    if (match.result) {
-                        const winner = match.result.winner;
-                        const loser = winner === match.player1.name ? match.player2.name : match.player1.name;
-                        
-                        standings[groupKey][winner].wins++;
-                        standings[groupKey][winner].played++;
-                        standings[groupKey][loser].losses++;
-                        standings[groupKey][loser].played++;
-                    }
-                });
-            });
-            
-            return standings;
-        }
+    function computeStandings(){
+      const stats = {};
+      for(const p of Object.values(appState.players)){
+        stats[p.id] = { id:p.id, name:p.name, hcp:p.hcp, group:p.group, played:0, wins:0, losses:0, diff:0 };
+      }
+      for(const m of Object.values(appState.matches)){
+        if(!m.result) continue;
+        const w = m.result.winnerId;
+        const p1 = m.p1; const p2 = m.p2;
+        const l = (w===p1? p2 : p1);
+        const d = marginToDiff(m.result.margin);
+        stats[w].wins++; stats[w].played++; stats[w].diff += d;
+        stats[l].losses++; stats[l].played++; stats[l].diff -= d;
+      }
+      const grouped = { A:[],B:[],C:[],D:[] };
+      for(const s of Object.values(stats)) grouped[s.group].push(s);
+      for(const g of ['A','B','C','D']){
+        grouped[g].sort((a,b)=> (b.wins-a.wins) || (b.diff-a.diff) || a.name.localeCompare(b.name));
+      }
+      return grouped;
+    }
 
-        // Render standings tab
-        function renderStandings() {
-            const container = document.getElementById('standings-content');
-            const standings = calculateStandings();
-            
-            let html = '<div class="standings-grid">';
-            
-            Object.keys(standings).forEach(groupKey => {
-                const group = tournamentData.groups[groupKey];
-                const groupStandings = Object.values(standings[groupKey])
-                    .sort((a, b) => {
-                        if (b.wins !== a.wins) return b.wins - a.wins;
-                        return a.losses - b.losses;
-                    });
-                
-                html += `
-                    <div class="standings-group">
-                        <h3>${group.name}</h3>
-                `;
-                
-                groupStandings.forEach((player, index) => {
-                    const isQualified = index < 2;
-                    html += `
-                        <div class="standings-row ${isQualified ? 'qualified' : ''}">
-                            <div style="display: flex; align-items: center;">
-                                <span class="position">${index + 1}.</span>
-                                <span class="standings-name">${player.name}</span>
-                            </div>
-                            <div class="standings-stats">
-                                <span class="wins">${player.wins}W</span>
-                                <span class="losses">${player.losses}L</span>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                html += '</div>';
-            });
-            
-            html += '</div>';
-            container.innerHTML = html;
-        }
-
-        // Modal functions
-        function openModal(matchId) {
-            const [groupKey, matchIndex] = matchId.split('-');
-            const match = allMatches[groupKey][matchIndex];
-            currentMatch = { groupKey, matchIndex, match };
-            
-            const modal = document.getElementById('recordModal');
-            const winnerSelect = document.getElementById('winner');
-            const marginSelect = document.getElementById('margin');
-            
-            // Populate winner dropdown
-            winnerSelect.innerHTML = `
-                <option value="">Select winner...</option>
-                <option value="${match.player1.name}">${match.player1.name}</option>
-                <option value="${match.player2.name}">${match.player2.name}</option>
-            `;
-            
-            // If editing existing result, pre-populate
-            if (match.result) {
-                winnerSelect.value = match.result.winner;
-                marginSelect.value = match.result.margin;
-            } else {
-                winnerSelect.value = '';
-                marginSelect.value = '';
-            }
-            
-            modal.classList.add('active');
-        }
-
-        function closeModal() {
-            document.getElementById('recordModal').classList.remove('active');
-            document.getElementById('recordForm').reset();
-            currentMatch = null;
-        }
-
-        // Handle form submission
-        document.getElementById('recordForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const winner = document.getElementById('winner').value;
-            const margin = document.getElementById('margin').value;
-            
-            if (winner && margin && currentMatch) {
-                // Update Firebase
-                const matchRef = database.ref(`matches/${currentMatch.groupKey}/${currentMatch.matchIndex}/result`);
-                matchRef.set({
-                    winner: winner,
-                    margin: margin
-                });
-                
-                closeModal();
-            }
+    function renderStandings(){
+      const container = document.getElementById('standingsContainer');
+      const grouped = computeStandings();
+      container.innerHTML = '';
+      for(const g of ['A','B','C','D']){
+        const block = el(`<div class="card"><h2 style="margin-top:0">Group ${g}</h2>
+          <table class="table">
+            <thead><tr><th>Player</th><th class="stat">W</th><th class="stat">L</th><th class="stat">Diff</th><th class="stat">Pl</th></tr></thead>
+            <tbody id="tbody_${g}"></tbody>
+          </table>
+          <div class="kicker">Top 2 advance from each group.</div>
+        </div>`);
+        container.appendChild(block);
+        const body = block.querySelector(`#tbody_${g}`);
+        grouped[g].forEach((s,idx)=>{
+          const tr = el(`<tr class="${idx<2?'qual':''}"><td>${s.name} <span class="hcp">(${s.hcp})</span></td><td class="stat">${s.wins}</td><td class="stat">${s.losses}</td><td class="stat">${s.diff}</td><td class="stat">${s.played}</td></tr>`);
+          body.appendChild(tr);
         });
+      }
+    }
 
-        // Tab switching
-        function showTab(tab) {
-            // Update tab buttons
-            document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            // Update content
-            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
-            document.getElementById(`${tab}-content`).style.display = 'block';
-            
-            renderCurrentTab();
-        }
+    // ====== INTERACTION ======
+    function onMatchButton(e){
+      const mid = e.currentTarget.getAttribute('data-mid');
+      const act = e.currentTarget.getAttribute('data-act');
+      if(act==='record') openDialog(mid);
+      if(act==='clear') clearResult(mid);
+    }
 
-        function renderCurrentTab() {
-            const activeTab = document.querySelector('.tab.active').textContent.toLowerCase();
-            if (activeTab === 'matches') {
-                renderMatches();
-            } else if (activeTab === 'standings') {
-                renderStandings();
+    function openDialog(matchId){
+      selectedMatchId = matchId;
+      const m = appState.matches[matchId];
+      const p1 = appState.players[m.p1];
+      const p2 = appState.players[m.p2];
+      document.getElementById('modalMatchLabel').innerText = `${p1.name} vs ${p2.name}`;
+      const wSel = document.getElementById('winnerSelect');
+      wSel.innerHTML = '';
+      wSel.appendChild(el(`<option value="${p1.id}">${p1.name}</option>`));
+      wSel.appendChild(el(`<option value="${p2.id}">${p2.name}</option>`));
+      const margins = ['1 up','2 & 1','3 & 2','4 & 3','5 & 4','6 & 5','7 & 6','8 & 7','9 & 8'];
+      const mSel = document.getElementById('marginSelect');
+      mSel.innerHTML = '';
+      margins.forEach(x=> mSel.appendChild(el(`<option>${x}</option>`)));
+      if(m.result){
+        wSel.value = m.result.winnerId;
+        mSel.value = m.result.margin;
+      }
+      document.getElementById('resultDialog').showModal();
+    }
+
+    function closeDialog(){
+      document.getElementById('resultDialog').close();
+      selectedMatchId = null;
+    }
+
+    async function saveResult(){
+      if(!selectedMatchId) return;
+      const m = appState.matches[selectedMatchId];
+      const winnerId = document.getElementById('winnerSelect').value;
+      const margin = document.getElementById('marginSelect').value;
+      const result = { winnerId, margin, ts: Date.now(), by: clientId };
+      await api(`${ROOT_PATH}/matches/${m.id}/result`, { method:'PATCH', body: result });
+      closeDialog();
+    }
+
+    async function clearResult(matchId){
+      if(!confirm('Clear the recorded result for this match?')) return;
+      await apiDelete(`${ROOT_PATH}/matches/${matchId}/result`);
+    }
+
+    function switchView(view){
+      const m = document.getElementById('viewMatches');
+      const s = document.getElementById('viewStandings');
+      const tm = document.getElementById('tabMatches');
+      const ts = document.getElementById('tabStandings');
+      if(view==='matches'){ m.style.display='block'; s.style.display='none'; tm.classList.add('active'); ts.classList.remove('active'); }
+      else { s.style.display='block'; m.style.display='none'; ts.classList.add('active'); tm.classList.remove('active'); renderStandings(); }
+    }
+
+    function showInitNotice(text){
+      const n = document.getElementById('initNotice'); n.style.display='block'; n.innerText = text;
+      setTimeout(()=>{ n.style.display='none'; }, 4000);
+    }
+
+    async function exportData(){
+      const data = await api(`${ROOT_PATH}`);
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'tournament-export.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    async function resetAll(){
+      if(!confirm('Wipe ALL tournament data and re-seed?')) return;
+      await apiDelete(`${ROOT_PATH}`);
+      await ensureSeeded();
+      await loadAll();
+    }
+
+    // ====== BOOT ======
+    async function loadAll(){
+      const data = await api(`${ROOT_PATH}`);
+      if(data){ appState = data; }
+      renderMatches();
+      if(document.getElementById('viewStandings').style.display!=='none') renderStandings();
+    }
+
+    (async function init(){
+      // Show reset button in admin mode (add #admin to URL)
+      const isAdmin = location.hash.includes('admin');
+      document.getElementById('resetBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+
+      document.getElementById('saveResultBtn').addEventListener('click', saveResult);
+      document.getElementById('exportBtn').addEventListener('click', exportData);
+      document.getElementById('resetBtn').addEventListener('click', resetAll);
+
+      await ensureSeeded();
+      await loadAll();
+
+      // live updates via REST streaming (SSE)
+      onStream(`${ROOT_PATH}`, (evt)=>{
+        // evt = { path, data }
+        if(evt && typeof evt.path === 'string'){
+          if(evt.path === '/' && evt.data){ appState = evt.data; }
+          else {
+            // shallow patch
+            const pathParts = evt.path.split('/').filter(Boolean);
+            let node = appState;
+            for(let i=0;i<pathParts.length-1;i++){
+              const k = pathParts[i];
+              if(!(k in node)) node[k] = {};
+              node = node[k];
             }
+            const last = pathParts[pathParts.length-1];
+            node[last] = evt.data;
+          }
+          renderMatches();
+          if(document.getElementById('viewStandings').style.display!=='none') renderStandings();
         }
-
-        // Initialize on load
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeDatabase();
-        });
-    </script>
+      });
+    })();
+  </script>
 </body>
 </html>
