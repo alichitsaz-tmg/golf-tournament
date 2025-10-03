@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rancho Carlsbad Playoff Tournament Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button.danger {
+            background: #e74c3c;
+        }
+        
+        button.danger:hover {
+            background: #c0392b;
+        }
+        
+        .groups-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .group {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .group-header {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: -20px -20px 20px -20px;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        
+        .standings {
+            margin-bottom: 20px;
+        }
+        
+        .standings h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .player-standing {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #ddd;
+        }
+        
+        .player-standing.advancing {
+            border-left-color: #27ae60;
+            background: #e8f8f0;
+        }
+        
+        .player-name {
+            font-weight: 600;
+            flex: 1;
+        }
+        
+        .player-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .matches h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .match {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .match-header {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .match-result {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .match-result select {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1em;
+            background: white;
+        }
+        
+        .match-result select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .match-completed {
+            background: #e8f8f0;
+            border-color: #27ae60;
+        }
+        
+        .winner-indicator {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .groups-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏌️ Rancho Carlsbad Playoff Tournament</h1>
+            <div class="subtitle">Match Play Tracker | Sept 22 - Oct 11</div>
+        </header>
+        
+        <div class="controls">
+            <button onclick="saveData()">💾 Save Progress</button>
+            <button onclick="exportData()">📊 Export Data</button>
+            <button onclick="resetData()" class="danger">🔄 Reset All</button>
+        </div>
+        
+        <div class="groups-container" id="groupsContainer"></div>
+    </div>
+
+    <script>
+        const tournamentData = {
+            'Group A': {
+                players: [
+                    {name: 'Craig Schneider', handicap: 2.6},
+                    {name: 'Buddha Gurung', handicap: 8.5},
+                    {name: 'Mike Callagy', handicap: 11.0},
+                    {name: 'Cesar Zepeda', handicap: 20.1}
+                ],
+                matches: [
+                    {p1: 'Craig Schneider', p2: 'Buddha Gurung'},
+                    {p1: 'Craig Schneider', p2: 'Mike Callagy'},
+                    {p1: 'Craig Schneider', p2: 'Cesar Zepeda'},
+                    {p1: 'Buddha Gurung', p2: 'Mike Callagy'},
+                    {p1: 'Buddha Gurung', p2: 'Cesar Zepeda'},
+                    {p1: 'Mike Callagy', p2: 'Cesar Zepeda'}
+                ]
+            },
+            'Group B': {
+                players: [
+                    {name: 'Elliot Badar', handicap: 6.2},
+                    {name: 'Tom Collard', handicap: 7.5},
+                    {name: 'Sree Gottipati', handicap: 12.0},
+                    {name: 'Brian Crumrine', handicap: 17.5}
+                ],
+                matches: [
+                    {p1: 'Elliot Badar', p2: 'Tom Collard'},
+                    {p1: 'Elliot Badar', p2: 'Sree Gottipati'},
+                    {p1: 'Elliot Badar', p2: 'Brian Crumrine'},
+                    {p1: 'Tom Collard', p2: 'Sree Gottipati'},
+                    {p1: 'Tom Collard', p2: 'Brian Crumrine'},
+                    {p1: 'Sree Gottipati', p2: 'Brian Crumrine'}
+                ]
+            },
+            'Group C': {
+                players: [
+                    {name: 'Nathan Kelly', handicap: 7.0},
+                    {name: 'Rick Lines', handicap: 8.0},
+                    {name: 'David Damitz', handicap: 9.3},
+                    {name: 'Paul Wollenburg', handicap: 9.5}
+                ],
+                matches: [
+                    {p1: 'Nathan Kelly', p2: 'Rick Lines'},
+                    {p1: 'Nathan Kelly', p2: 'David Damitz'},
+                    {p1: 'Nathan Kelly', p2: 'Paul Wollenburg'},
+                    {p1: 'Rick Lines', p2: 'David Damitz'},
+                    {p1: 'Rick Lines', p2: 'Paul Wollenburg'},
+                    {p1: 'David Damitz', p2: 'Paul Wollenburg'}
+                ]
+            },
+            'Group D': {
+                players: [
+                    {name: 'Quyen Dang', handicap: 8.3},
+                    {name: 'Abram Rios', handicap: 7.0},
+                    {name: 'Keshav Prasad', handicap: 8.0},
+                    {name: 'Ali Chitsaz', handicap: 8.5},
+                    {name: 'Konda Reddy Polu', handicap: 12.0}
+                ],
+                matches: [
+                    {p1: 'Quyen Dang', p2: 'Abram Rios'},
+                    {p1: 'Quyen Dang', p2: 'Keshav Prasad'},
+                    {p1: 'Quyen Dang', p2: 'Ali Chitsaz'},
+                    {p1: 'Quyen Dang', p2: 'Konda Reddy Polu'},
+                    {p1: 'Abram Rios', p2: 'Keshav Prasad'},
+                    {p1: 'Abram Rios', p2: 'Ali Chitsaz'},
+                    {p1: 'Abram Rios', p2: 'Konda Reddy Polu'},
+                    {p1: 'Keshav Prasad', p2: 'Ali Chitsaz'},
+                    {p1: 'Keshav Prasad', p2: 'Konda Reddy Polu'},
+                    {p1: 'Ali Chitsaz', p2: 'Konda Reddy Polu'}
+                ]
+            }
+        };
+
+        let matchResults = {};
+
+        function initializeTracker() {
+            loadData();
+            renderGroups();
+        }
+
+        function calculateStandings(groupName) {
+            const group = tournamentData[groupName];
+            const standings = {};
+            
+            group.players.forEach(player => {
+                standings[player.name] = {
+                    name: player.name,
+                    handicap: player.handicap,
+                    wins: 0,
+                    losses: 0,
+                    ties: 0,
+                    points: 0
+                };
+            });
+
+            group.matches.forEach((match, idx) => {
+                const matchKey = `${groupName}-${idx}`;
+                const result = matchResults[matchKey];
+                
+                if (result && result !== 'pending') {
+                    if (result === 'tie') {
+                        standings[match.p1].ties++;
+                        standings[match.p2].ties++;
+                        standings[match.p1].points += 0.5;
+                        standings[match.p2].points += 0.5;
+                    } else if (result === match.p1) {
+                        standings[match.p1].wins++;
+                        standings[match.p2].losses++;
+                        standings[match.p1].points += 1;
+                    } else {
+                        standings[match.p2].wins++;
+                        standings[match.p1].losses++;
+                        standings[match.p2].points += 1;
+                    }
+                }
+            });
+
+            return Object.values(standings).sort((a, b) => {
+                if (b.points !== a.points) return b.points - a.points;
+                if (b.wins !== a.wins) return b.wins - a.wins;
+                return a.handicap - b.handicap;
+            });
+        }
+
+        function renderGroups() {
+            const container = document.getElementById('groupsContainer');
+            container.innerHTML = '';
+
+            Object.keys(tournamentData).forEach(groupName => {
+                const group = tournamentData[groupName];
+                const standings = calculateStandings(groupName);
+                
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'group';
+                
+                let html = `
+                    <div class="group-header">${groupName}</div>
+                    <div class="standings">
+                        <h3>📊 Standings</h3>
+                `;
+                
+                standings.forEach((player, idx) => {
+                    const advancing = idx < 2 ? 'advancing' : '';
+                    html += `
+                        <div class="player-standing ${advancing}">
+                            <div class="player-name">${idx + 1}. ${player.name}</div>
+                            <div class="player-stats">
+                                <span>W: ${player.wins}</span>
+                                <span>L: ${player.losses}</span>
+                                <span>T: ${player.ties}</span>
+                                <span><strong>${player.points} pts</strong></span>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div><div class="matches"><h3>🏌️ Matches</h3>`;
+                
+                group.matches.forEach((match, idx) => {
+                    const matchKey = `${groupName}-${idx}`;
+                    const result = matchResults[matchKey] || 'pending';
+                    const completed = result !== 'pending' ? 'match-completed' : '';
+                    
+                    html += `
+                        <div class="match ${completed}">
+                            <div class="match-header">${match.p1} vs ${match.p2}</div>
+                            <div class="match-result">
+                                <select onchange="updateMatch('${matchKey}', this.value)">
+                                    <option value="pending" ${result === 'pending' ? 'selected' : ''}>Not Played</option>
+                                    <option value="${match.p1}" ${result === match.p1 ? 'selected' : ''}>${match.p1} wins</option>
+                                    <option value="${match.p2}" ${result === match.p2 ? 'selected' : ''}>${match.p2} wins</option>
+                                    <option value="tie" ${result === 'tie' ? 'selected' : ''}>Tie</option>
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                groupDiv.innerHTML = html;
+                container.appendChild(groupDiv);
+            });
+        }
+
+        function updateMatch(matchKey, result) {
+            matchResults[matchKey] = result;
+            saveData();
+            renderGroups();
+        }
+
+        function saveData() {
+            localStorage.setItem('tournamentResults', JSON.stringify(matchResults));
+            alert('Progress saved successfully! ✅');
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('tournamentResults');
+            if (saved) {
+                matchResults = JSON.parse(saved);
+            }
+        }
+
+        function exportData() {
+            let report = 'RANCHO CARLSBAD TOURNAMENT REPORT\n';
+            report += '=' .repeat(50) + '\n\n';
+            
+            Object.keys(tournamentData).forEach(groupName => {
+                report += `${groupName}\n`;
+                report += '-'.repeat(50) + '\n';
+                
+                const standings = calculateStandings(groupName);
+                standings.forEach((player, idx) => {
+                    const status = idx < 2 ? ' ✓ ADVANCING' : '';
+                    report += `${idx + 1}. ${player.name} - ${player.points} pts (${player.wins}W-${player.losses}L-${player.ties}T)${status}\n`;
+                });
+                report += '\n';
+            });
+            
+            const blob = new Blob([report], {type: 'text/plain'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'tournament-report.txt';
+            a.click();
+        }
+
+        function resetData() {
+            if (confirm('Are you sure you want to reset ALL tournament data? This cannot be undone!')) {
+                matchResults = {};
+                localStorage.removeItem('tournamentResults');
+                renderGroups();
+                alert('Tournament data reset! 🔄');
+            }
+        }
+
+        initializeTracker();
+    </script>
+</body>
+</html>
